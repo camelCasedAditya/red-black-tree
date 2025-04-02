@@ -15,14 +15,31 @@ int BLACKCOLOR = 1;
 int REDCOLOR = 2;
 
 int main() {
-  add(head, head, 10);
-  add(head, head, 20);
-  add(head, head, 30);
-  add(head, head, 15);
-  add(head, head, 25);
-  add(head, head, 5);
-  cout << "PASS" << endl;
-  printFormatted(head, 0);
+  //add(head, head, 10);
+  //printFormatted(head, 0);
+  //cout << "1" << endl;
+  //add(head, head, 20);
+  //  printFormatted(head, 0);
+  //cout << "2" << endl;
+  //add(head, head, 30);
+  //  printFormatted(head, 0);
+  //cout << "3" << endl;
+  //add(head, head, 15);
+  //  printFormatted(head, 0);
+  //cout << "4" << endl;
+  //add(head, head, 25);
+  // printFormatted(head, 0);
+  //cout << "5" << endl;
+  //add(head, head, 5);
+  //cout << "PASS" << endl;
+  //printFormatted(head, 0);
+  int input = -1;
+  while (input != 0) {
+    cout << "Enter a number: " << endl;
+    cin >> input;
+    add(head, head, input);
+    printFormatted(head, 0);
+  }
   return 0;
 }
 
@@ -54,7 +71,7 @@ void add(Tree*& head, Tree* node, int num) {
     case2(temp);
     case4(head);
     case5(temp);
-    case6(temp);
+    case6(temp->getPrevious());
     return;
   }
   // If the left is null and we want to move left we add the number on the left
@@ -64,10 +81,18 @@ void add(Tree*& head, Tree* node, int num) {
     node->setLeft(temp);
     temp->setPrevious(node);
     temp->setColor(REDCOLOR);
-    case2(temp);
-    case4(head);
-    case5(temp);
-    case6(temp);
+    if (temp->getPrevious() != NULL && temp->getPrevious()->getColor() == REDCOLOR) {
+      case2(temp);
+      case4(head);
+      //case5(temp);
+      //case6(temp->getPrevious());
+    }
+    if (temp->getPrevious() != NULL && temp->getPrevious()->getColor() == REDCOLOR) {
+      case5(temp);
+    }
+    if (temp->getPrevious() != NULL && temp->getPrevious()->getColor() == REDCOLOR) {
+      case6(temp->getPrevious());
+    }
     return;
   }
   return;
@@ -103,15 +128,32 @@ void case2(Tree* child) {
   cout << "in" << endl;
   Tree* node = child->getPrevious();
   if (node == head) {
+    cout << "head" << endl;
     node->setColor(BLACKCOLOR);
+    cout << "colored head" << endl;
     return;
   }
+  cout << "pre if" << endl;
   if (node != NULL && node->getColor() == REDCOLOR && (node->getSibling() != NULL && node->getSibling()->getColor() == REDCOLOR)) {
-      node->setColor(BLACKCOLOR);
-      node->getSibling()->setColor(BLACKCOLOR);
-      node->getPrevious()->setColor(REDCOLOR);
+    cout << "in here" << endl;
+    node->setColor(BLACKCOLOR);
+    cout << "black" << endl;
+    node->getSibling()->setColor(BLACKCOLOR);
+    cout << "black2" << endl;
+    node->getPrevious()->setColor(REDCOLOR);
+    cout << "red" << endl;
+  }
+  case4(head);
+  cout << "p" << endl;
+  if (node != NULL && node->getPrevious() != NULL) {
+    case5(node->getPrevious());
+  }
+  cout << "d" << endl;
+  if (node != NULL && node->getPrevious() != NULL && node->getPrevious()->getPrevious() != NULL) {
+    case6(node->getPrevious()->getPrevious());
   }
   case2(node);
+	//node->getPrevious();
   return;
 }
 
@@ -122,8 +164,9 @@ void case4(Tree* node) {
 }
 
 void case5(Tree* node) {
+  cout << "in here" << endl;
   Tree* parent = node->getPrevious();
-  if (parent->getPrevious() == head) {
+  if (parent->getPrevious() != head) {
     if (node != NULL && node->getPrevious() != NULL && node->getPrevious()->getPrevious() != NULL) {
       if ((node->getPrevious()->getRight() == node
 	   && node->getPrevious()->getPrevious()->getLeft() == node->getPrevious())
@@ -135,25 +178,31 @@ void case5(Tree* node) {
         if (parent->getPrevious()->getLeft() == parent) {
 	  Tree* g = parent->getPrevious();
 	  parent->setRight(node->getLeft());
-	  node->getLeft()->setPrevious(parent);
+	  if (node->getLeft() != NULL) {
+	    node->getLeft()->setPrevious(parent);
+	  }
 	  parent->getPrevious()->setLeft(node);
 	  node->setPrevious(g);
 	  node->setLeft(parent);
 	  parent->setPrevious(node);
 	  cout << "Case 5->1" << endl;
-	  case6(node);
+	  case6(parent);
 	  return;
         }
+	cout << parent->getPrevious()->getValue() << endl;
         if (parent->getPrevious()->getRight() == parent) {
+	  cout << "HERE" << endl;
 	  Tree* g = parent->getPrevious();
 	  parent->setLeft(node->getRight());
-	  node->getRight()->setPrevious(parent);
+	  if (node->getRight() != NULL) {
+	    node->getRight()->setPrevious(parent);
+	  }
 	  parent->getPrevious()->setRight(node);
 	  node->setPrevious(g);
 	  node->setRight(parent);
 	  parent->setPrevious(node);
 	  cout << "Case 5->2" << endl;
-	  case6(node);
+	  case6(parent);
 	  return;
         }
       }
@@ -170,25 +219,29 @@ void case5(Tree* node) {
         //parent->setRight(node->getLeft());
         if (parent->getPrevious()->getLeft() == parent) {
           parent->setRight(node->getLeft());
-          node->getLeft()->setPrevious(parent);
+	  if (node->getLeft() != NULL) {
+	    node->getLeft()->setPrevious(parent);
+	  }
           head->setLeft(node);
           node->setPrevious(head);
           node->setLeft(parent);
           parent->setPrevious(node);
           cout << "Case 5->1" << endl;
-	  case6(node);
+	  case6(parent);
 	  return;
         }
         if (parent->getPrevious()->getRight() == parent) {
           Tree* g = parent->getPrevious();
           parent->setLeft(node->getRight());
-          node->getRight()->setPrevious(parent);
+	  if (node->getRight() != NULL) {
+	    node->getRight()->setPrevious(parent);
+	  }
           head->setRight(node);
           node->setPrevious(head);
           node->setRight(parent);
           parent->setPrevious(node);
           cout << "Case 5->2" << endl;
-	  case6(node);
+	  case6(parent);
 	  return;
         }
       }
@@ -197,6 +250,7 @@ void case5(Tree* node) {
 }
 
 void case6(Tree* node) {
+  cout << node->getValue() << endl;
   if (node->getPrevious() != head) {
     if (node->getPrevious() != NULL && node->getPrevious()->getPrevious() != NULL && (node->getLeft() != NULL || node->getRight() != NULL)) {
       if (node->getPrevious()->getLeft() == node && node->getLeft() != NULL) {
@@ -209,9 +263,13 @@ void case6(Tree* node) {
 	node->setRight(g);
 	g->setPrevious(node);
 	node->getRight()->setRight(u);
-	u->setPrevious(node->getRight());
+	if (u != NULL) {
+	  u->setPrevious(node->getRight());
+	}
 	node->getRight()->setLeft(c);
-	c->setPrevious(node->getRight());
+	if (c != NULL) {
+	  c->setPrevious(node->getRight());
+	}
 	cout << "Case 6->1" << endl;
 	node->setColor(BLACKCOLOR);
         g->setColor(REDCOLOR);
@@ -228,9 +286,13 @@ void case6(Tree* node) {
 	node->setLeft(g);
 	g->setPrevious(node);
 	node->getLeft()->setLeft(u);
-	u->setPrevious(node->getLeft());
+	if (u != NULL) {
+	  u->setPrevious(node->getLeft());
+	}
 	node->getLeft()->setRight(c);
-	c->setPrevious(node->getLeft());
+	if (c != NULL) {
+	  c->setPrevious(node->getLeft());
+	}
 	cout << "Case 6->2" << endl;
 	node->setColor(BLACKCOLOR);
         g->setColor(REDCOLOR);
@@ -249,9 +311,13 @@ void case6(Tree* node) {
         node->setRight(g);
 	g->setPrevious(node);
         node->getRight()->setRight(u);
-	u->setPrevious(node->getRight());
+	if (u != NULL) {
+	  u->setPrevious(node->getRight());
+	}
         node->getRight()->setLeft(c);
-	c->setPrevious(node->getRight());
+	if (c != NULL) {
+	  c->setPrevious(node->getRight());
+	}
         cout << "Case 6->1" << endl;
 	head->setColor(BLACKCOLOR);
 	g->setColor(REDCOLOR);
@@ -266,9 +332,13 @@ void case6(Tree* node) {
         node->setLeft(g);
 	g->setPrevious(node);
         node->getLeft()->setLeft(u);
-	u->setPrevious(node->getLeft());
-        node->getLeft()->setRight(c);
-	c->setPrevious(node->getLeft());
+	if (u != NULL) {
+	  u->setPrevious(node->getLeft());
+	}
+	node->getLeft()->setRight(c);
+	if (c != NULL) {
+	  c->setPrevious(node->getLeft());
+	}
         cout << "Case 6->2" << endl;
 	head->setColor(BLACKCOLOR);
         g->setColor(REDCOLOR);
