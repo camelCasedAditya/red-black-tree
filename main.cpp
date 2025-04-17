@@ -420,26 +420,26 @@ void case4(Tree* node) {
   }
 }
 
-void rotateLeft(Tree* pivot) {
-  if (pivot == NULL || pivot->getRight() == NULL) {
-    return;
-  }
+//void rotateLeft(Tree* pivot) {
+//if (pivot == NULL || pivot->getRight() == NULL) {
+//  return;
+//}
 
-  Tree* newParent = pivot->getRight();
-  if (newParent->getLeft() == != NULL) {
-    pivot->setRight(newParent->getLeft());
-    newParent->getLeft()->setPrevious(pivot);
-  }
-  newParent->setPrevious(pivot->getPrevious());
-  if (pivot->getPrevious() == NULL) {
-    head = newParent; 
-  }
-  else if (pivot == pivot->getPrevious()->getLeft()){
-    newParent->getPrevious()->setLeft(newParent);
-  }
-  else {
-    newParent->getPrevious()->setRight(newParent);
-  }
-  newParent->setLeft(pivot);
-  pivot->setPrevious(newParent);
-}
+//Tree* newParent = pivot->getRight();
+//if (newParent->getLeft() == != NULL) {
+//  pivot->setRight(newParent->getLeft());
+//  newParent->getLeft()->setPrevious(pivot);
+//}
+//newParent->setPrevious(pivot->getPrevious());
+//if (pivot->getPrevious() == NULL) {
+//  head = newParent; 
+//}
+//else if (pivot == pivot->getPrevious()->getLeft()){
+//  newParent->getPrevious()->setLeft(newParent);
+//}
+//else {
+//  newParent->getPrevious()->setRight(newParent);
+//}
+//newParent->setLeft(pivot);
+//pivot->setPrevious(newParent);
+//}
