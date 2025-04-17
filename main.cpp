@@ -216,6 +216,7 @@ void case5(Tree* node) {
         Tree* parent = node->getPrevious();
         //parent->setRight(node->getLeft());
         if (parent->getPrevious()->getLeft() == parent) {
+	  //cout << "Works here" << endl;
           Tree* g = parent->getPrevious();
 	  // Make the child the new parent and the parent the left child
           parent->setRight(node->getLeft());
@@ -228,7 +229,7 @@ void case5(Tree* node) {
           node->setLeft(parent);
           parent->setPrevious(node);
 	  // call case 6
-          case6(parent);
+          case6(parent->getPrevious());
           return;
         }
 	// Same logic as before except for the opposite side
@@ -242,7 +243,7 @@ void case5(Tree* node) {
           node->setPrevious(g);
           node->setRight(parent);
           parent->setPrevious(node);
-          case6(parent);
+          case6(parent->getPrevious());
           return;
         }
       }
@@ -267,7 +268,7 @@ void case5(Tree* node) {
           node->setPrevious(head);
           node->setLeft(parent);
           parent->setPrevious(node);
-	  case6(parent);
+	  case6(parent->getPrevious());
 	  return;
         }
         if (parent->getPrevious()->getRight() == parent) {
@@ -280,7 +281,7 @@ void case5(Tree* node) {
           node->setPrevious(head);
           node->setRight(parent);
           parent->setPrevious(node);
-	  case6(parent);
+	  case6(parent->getPrevious());
 	  return;
         }
       }
@@ -291,6 +292,7 @@ void case5(Tree* node) {
 // Case 6 function (Outer grand child)
 void case6(Tree* node) {
   // Exit if the node is null
+  cout << node->getValue() << endl;
   if (node == NULL) {
     return;
   }
@@ -299,6 +301,7 @@ void case6(Tree* node) {
     if (node->getPrevious() != NULL && node->getPrevious()->getPrevious() != NULL && (node->getLeft() != NULL || node->getRight() != NULL)) {
       if (node->getPrevious()->getLeft() == node && node->getLeft() != NULL) {
 	// Set needed variables/nodes
+	//cout << "in case 6" << endl;
 	Tree* gg = node->getPrevious()->getPrevious();
 	Tree* g = node->getPrevious();
 	Tree* u = node->getSibling();
