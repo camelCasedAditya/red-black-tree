@@ -14,6 +14,7 @@ void case5(Tree* node);
 void case6(Tree* node);
 void rotateLeft(Tree* pivot);
 void rotateRight(Tree* pivot);
+void deleteNode(int val);
 int BLACKCOLOR = 1;
 int REDCOLOR = 2;
 
@@ -43,6 +44,19 @@ int main() {
       else {
 	// call add function to add number to the tree
 	add(head, head, num);
+      }
+    }
+    if (strcmp(input, "DELETE") == 0) {
+      int num;
+      // get number user wants to add and makes sure its valid
+      cout << "Enter the number you want to delete" << endl;
+      cin >> num;
+      if (num > 1000 || num < 1) {
+        cout << "INVALID NUM: " << num << endl;
+      }
+      else {
+        // call add function to add number to the tree
+        deleteNode(num);
       }
     }
     else if (strcmp(input, "ADDFILE") == 0) {
@@ -200,6 +214,52 @@ void case2(Tree* child) {
   return;
 }
 
+void deleteNode(int val) {
+  Tree* current = head;
+  while(current->getValue() != val) {
+    if (val > current->getValue() && current->getRight() != NULL) {
+      current = current->getRight();
+    }
+    else if (val < current->getValue() && current->getLeft() != NULL) {
+      current = current->getLeft();
+    }
+    else {
+      break;
+    }
+  }
+  if (current->getValue() != val) {
+    cout << "That number does not exist in the tree" << endl;
+    return;
+  }
+
+  
+  Tree* parent = current->getPrevious();
+  Tree* sibling = current->getSibling();
+  if (current->getLeft() == NULL && current->getRight() == NULL) {
+    if (current == head) {
+      delete current;
+      head = NULL;
+      return;
+    }
+    else if (current->getColor() == REDCOLOR) {
+      if (current == parent->getLeft()) {
+	parent->setLeft(NULL);
+      }
+      else {
+	parent->setRight(NULL);
+      }
+      delete current;
+      return;
+    }
+  }
+
+  if (parent->getLeft() == current) {
+    parent->setLeft(NULL);
+  }
+  else {
+    parent->setRight(NULL)
+  }
+}
 
 void case5(Tree* node) {
   // Exit the function if required nodes are NULL
