@@ -12,6 +12,8 @@ void case2(Tree* child);
 void case4(Tree* node);
 void case5(Tree* node);
 void case6(Tree* node);
+void rotateLeft(Tree* pivot);
+void rotateRight(Tree* pivot);
 int BLACKCOLOR = 1;
 int REDCOLOR = 2;
 
@@ -191,6 +193,7 @@ void case2(Tree* child) {
       else {
 	// Else we call case six because it is an outer grandchild
         case6(node);
+	cout << "Val: " << node->getValue() << endl;
       }
     }
   }
@@ -203,210 +206,39 @@ void case5(Tree* node) {
   if (node == NULL || node->getPrevious() == NULL || node->getPrevious()->getPrevious() == NULL) {
     return;
   }
-  // Define required nodes
-  Tree* parent = node->getPrevious();
-  Tree* grandparent = parent->getPrevious();
-
-  // If the grandparent is not head
-  if (parent != NULL && parent->getPrevious() != head) {
-    // If the child is an inner grand child
-    if (node != NULL && node->getPrevious() != NULL && node->getPrevious()->getPrevious() != NULL) {
-      if ((node->getPrevious()->getRight() == node && node->getPrevious()->getPrevious()->getLeft() == node->getPrevious()) || (node->getPrevious()->getLeft() == node && node->getPrevious()->getPrevious()->getRight() == node->getPrevious())
-	  ) {
-        Tree* parent = node->getPrevious();
-        //parent->setRight(node->getLeft());
-        if (parent->getPrevious()->getLeft() == parent) {
-	  //cout << "Works here" << endl;
-          Tree* g = parent->getPrevious();
-	  // Make the child the new parent and the parent the left child
-          parent->setRight(node->getLeft());
-          if (node->getLeft() != NULL) {
-            node->getLeft()->setPrevious(parent);
-          }
-	  // Set the next and previous to ensure the tree is connected
-          g->setLeft(node);
-          node->setPrevious(g);
-          node->setLeft(parent);
-          parent->setPrevious(node);
-	  // call case 6
-          case6(parent->getPrevious());
-          return;
-        }
-	// Same logic as before except for the opposite side
-        if (parent->getPrevious()->getRight() == parent) {
-          Tree* g = parent->getPrevious();
-          parent->setLeft(node->getRight());
-          if (node->getRight() != NULL) {
-            node->getRight()->setPrevious(parent);
-          }
-          g->setRight(node);
-          node->setPrevious(g);
-          node->setRight(parent);
-          parent->setPrevious(node);
-          case6(parent->getPrevious());
-          return;
-        }
-      }
-    }
+  if(node->getPrevious()->getRight() == node && node->getPrevious()->getPrevious()->getLeft() == node->getPrevious()) {
+    rotateLeft(node->getPrevious());
+    case6(node);
   }
-  // Same logic as before except we rotate modify head
-  if (parent != NULL && parent->getPrevious() == head) {
-    if (node != NULL && node->getPrevious() != NULL && node->getPrevious()->getPrevious() != NULL) {
-      if ((node->getPrevious()->getRight() == node
-           && node->getPrevious()->getPrevious()->getLeft() == node->getPrevious())
-          || (node->getPrevious()->getLeft() == node
-              && node->getPrevious()->getPrevious()->getRight() == node->getPrevious())
-          ) {
-        Tree* parent = node->getPrevious();
-        //parent->setRight(node->getLeft());
-        if (parent->getPrevious()->getLeft() == parent) {
-          parent->setRight(node->getLeft());
-        if (node->getLeft() != NULL) {
-          node->getLeft()->setPrevious(parent);
-        }
-          head->setLeft(node);
-          node->setPrevious(head);
-          node->setLeft(parent);
-          parent->setPrevious(node);
-	  case6(parent->getPrevious());
-	  return;
-        }
-        if (parent->getPrevious()->getRight() == parent) {
-          Tree* g = parent->getPrevious();
-          parent->setLeft(node->getRight());
-	  if (node->getRight() != NULL) {
-	    node->getRight()->setPrevious(parent);
-	  }
-          head->setRight(node);
-          node->setPrevious(head);
-          node->setRight(parent);
-          parent->setPrevious(node);
-	  case6(parent->getPrevious());
-	  return;
-        }
-      }
-    }
+  else if (node->getPrevious()->getLeft() == node && node->getPrevious()->getPrevious()->getRight() == node->getPrevious()) {
+    rotateRight(node->getPrevious());
+    case6(node);
   }
 }
 
 // Case 6 function (Outer grand child)
 void case6(Tree* node) {
+  cout << "case 6 " << endl;
   // Exit if the node is null
-  cout << node->getValue() << endl;
-  if (node == NULL) {
+  if (node == NULL ) {
     return;
   }
-  // If we are not rotating with head
-  if (node->getPrevious() != head) {
-    if (node->getPrevious() != NULL && node->getPrevious()->getPrevious() != NULL && (node->getLeft() != NULL || node->getRight() != NULL)) {
-      if (node->getPrevious()->getLeft() == node && node->getLeft() != NULL) {
-	// Set needed variables/nodes
-	//cout << "in case 6" << endl;
-	Tree* gg = node->getPrevious()->getPrevious();
-	Tree* g = node->getPrevious();
-	Tree* u = node->getSibling();
-	Tree* c = node->getRight();
-	// Make the parent the new grandparent
-	if (gg->getLeft() == g) {
-	  gg->setLeft(node);
-	} 
-	else {
-	  gg->setRight(node);
-	}
-	node->setPrevious(gg);
-	// Make the grandparent the right child
-	node->setRight(g);
-	g->setPrevious(node);
-	// Set the uncle to the right child of the grand parent
-	node->getRight()->setRight(u);
-	if (u != NULL) {
-	  u->setPrevious(node->getRight());
-	}
-	// Set the left of the old grandparent to the child node
-	node->getRight()->setLeft(c);
-	if (c != NULL) {
-	  c->setPrevious(node->getRight());
-	}
-	// Recolor node and grandparent
-	node->setColor(BLACKCOLOR);
-        g->setColor(REDCOLOR);
+  if(node->getLeft() == NULL && node->getRight() == NULL) {
+    return;
+  }
+  cout << node->getValue() << endl;
+  if (node->getPrevious()->getLeft() == node /*&& node->getPrevious()->getPrevious()->getLeft() == node->getPrevious()*/) {
+    rotateRight(node->getPrevious());
+    cout << "rotated" << endl;
+    node->getRight()->setColor(REDCOLOR);
+  }
+  else if (node->getPrevious()->getRight() == node /*&& node->getPrevious()->getPrevious()->getRight() == node->getPrevious()*/) {
+    cout << node->getValue() << endl;
+    rotateLeft(node->getPrevious());
+    node->getLeft()->setColor(REDCOLOR);
+  }
 
-	return;
-      }
-      // Same logic as before except for the opposite side
-      else if (node->getPrevious()->getRight() == node && node->getRight() != NULL) {
-	Tree* gg = node->getPrevious()->getPrevious();
-	Tree* g = node->getPrevious();
-	Tree* u = node->getSibling();
-	Tree* c = node->getLeft();
-	if (gg->getLeft() == g) {
-	  gg->setLeft(node);
-	} 
-	else {
-	  gg->setRight(node);
-	}
-	node->setPrevious(gg);
-	node->setLeft(g);
-	g->setPrevious(node);
-	node->getLeft()->setLeft(u);
-	if (u != NULL) {
-	  u->setPrevious(node->getLeft());
-	}
-	node->getLeft()->setRight(c);
-	if (c != NULL) {
-	  c->setPrevious(node->getLeft());
-	}
-	node->setColor(BLACKCOLOR);
-        g->setColor(REDCOLOR);
-	return;
-      }
-    }
-  }
-  // Same logic as before except head is modifyed
-  if (node->getPrevious() == head) {
-    if (node->getPrevious() != NULL && (node->getLeft() != NULL || node->getRight() != NULL)) {
-      if (node->getPrevious()->getLeft() == node && node->getLeft() != NULL) {
-        Tree* g = node->getPrevious();
-        Tree* u = node->getSibling();
-        Tree* c = node->getRight();
-        head = node;
-	node->setPrevious(NULL);
-        node->setRight(g);
-	g->setPrevious(node);
-        node->getRight()->setRight(u);
-	if (u != NULL) {
-	  u->setPrevious(node->getRight());
-	}
-        node->getRight()->setLeft(c);
-	if (c != NULL) {
-	  c->setPrevious(node->getRight());
-	}
-	head->setColor(BLACKCOLOR);
-	g->setColor(REDCOLOR);
-	return;
-      }
-      else if (node->getPrevious()->getRight() == node && node->getRight() != NULL) {
-        Tree* g = node->getPrevious();
-        Tree* u = node->getSibling();
-        Tree* c = node->getLeft();
-        head = node;
-	head->setPrevious(NULL);
-        node->setLeft(g);
-	g->setPrevious(node);
-        node->getLeft()->setLeft(u);
-	if (u != NULL) {
-	  u->setPrevious(node->getLeft());
-	}
-	node->getLeft()->setRight(c);
-	if (c != NULL) {
-	  c->setPrevious(node->getLeft());
-	}
-	head->setColor(BLACKCOLOR);
-        g->setColor(REDCOLOR);
-	return;
-      }
-    }
-  }
+  node->setColor(BLACKCOLOR);
 }
 
 // Function to recolor head if it is black
@@ -420,26 +252,51 @@ void case4(Tree* node) {
   }
 }
 
-//void rotateLeft(Tree* pivot) {
-//if (pivot == NULL || pivot->getRight() == NULL) {
-//  return;
-//}
+void rotateLeft(Tree* pivot) {
+  if (pivot == NULL || pivot->getRight() == NULL) {
+    return;
+  }
 
-//Tree* newParent = pivot->getRight();
-//if (newParent->getLeft() == != NULL) {
-//  pivot->setRight(newParent->getLeft());
-//  newParent->getLeft()->setPrevious(pivot);
-//}
-//newParent->setPrevious(pivot->getPrevious());
-//if (pivot->getPrevious() == NULL) {
-//  head = newParent; 
-//}
-//else if (pivot == pivot->getPrevious()->getLeft()){
-//  newParent->getPrevious()->setLeft(newParent);
-//}
-//else {
-//  newParent->getPrevious()->setRight(newParent);
-//}
-//newParent->setLeft(pivot);
-//pivot->setPrevious(newParent);
-//}
+  Tree* newParent = pivot->getRight();
+  pivot->setRight(newParent->getLeft());
+  if (newParent->getLeft() != NULL) {
+    newParent->getLeft()->setPrevious(pivot);
+  }
+  newParent->setPrevious(pivot->getPrevious());
+  if (pivot->getPrevious() == NULL) {
+    head = newParent; 
+  }
+  else if (pivot == pivot->getPrevious()->getLeft()){
+    newParent->getPrevious()->setLeft(newParent);
+  }
+  else {
+    newParent->getPrevious()->setRight(newParent);
+  }
+  newParent->setLeft(pivot);
+  pivot->setPrevious(newParent);
+}
+
+void rotateRight(Tree* pivot) {
+  if (pivot == NULL || pivot->getLeft() == NULL) {
+    cout << "failed conditions" << endl;
+    return;
+  }
+  cout << "right" << endl;
+  Tree* newParent = pivot->getLeft();
+  pivot->setLeft(newParent->getRight());
+  if (newParent->getRight() != NULL) {
+    newParent->getRight()->setPrevious(pivot);
+  }
+  newParent->setPrevious(pivot->getPrevious());
+  if (pivot->getPrevious() == NULL) {
+    head = newParent;
+  }
+  else if (pivot == pivot->getPrevious()->getRight()){
+    newParent->getPrevious()->setRight(newParent);
+  }
+  else {
+    newParent->getPrevious()->setLeft(newParent);
+  }
+  newParent->setRight(pivot);
+  pivot->setPrevious(newParent);
+}
