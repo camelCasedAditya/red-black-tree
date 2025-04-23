@@ -15,6 +15,7 @@ void case6(Tree* node);
 void rotateLeft(Tree* pivot);
 void rotateRight(Tree* pivot);
 void deleteNode(int val);
+void replaceNode(Tree* node, Tree* replacement);
 int BLACKCOLOR = 1;
 int REDCOLOR = 2;
 
@@ -231,34 +232,48 @@ void deleteNode(int val) {
     cout << "That number does not exist in the tree" << endl;
     return;
   }
+  cout << current->getPrevious()->getValue() << endl;
 
   
   Tree* parent = current->getPrevious();
   Tree* sibling = current->getSibling();
-  if (current->getLeft() == NULL && current->getRight() == NULL) {
-    if (current == head) {
-      delete current;
-      head = NULL;
-      return;
-    }
-    else if (current->getColor() == REDCOLOR) {
-      if (current == parent->getLeft()) {
-	parent->setLeft(NULL);
-      }
-      else {
-	parent->setRight(NULL);
-      }
-      delete current;
-      return;
-    }
+  int originalColor = current->getColor();
+  if (current->getLeft() == NULL) {
+    Tree* replacement = current->getRight();
+    replaceNode(current, replacement);
   }
-
-  if (parent->getLeft() == current) {
-    parent->setLeft(NULL);
+  else if (current->getRight() == NULL) {
+    Tree* replacement = current->getLeft();
+    replaceNode(current, replacement);
   }
   else {
-    parent->setRight(NULL)
+    Tree* temp = current->getRight();
+    while(temp->getLeft() != NULL) {
+      temp = temp->getLeft();
+    }
+    Tree* replacementChild = temp->getRight();
+    replaceNode(temp, replacementChild);
+    temp->setRight(current->getRight());
+    replaceNode(current, temp);
+    temp->setLeft(current->getLeft());
+    delete current;
   }
+}
+
+void replaceNode(Tree* node, Tree* replacement) {
+  if (node->getPrevious() == NULL) {
+    head = replacement;
+  }
+  else if (node->getPrevious()->getLeft() == node) {
+    node->getPrevious()->setLeft(replacement);
+  }
+  else {
+    node->getPrevious()->setRight(replacement);
+  }
+  cout << node->getPrevious()->getValue() << endl;
+  replacement->setPrevious(node->getPrevious());
+  //cout << node->getPrevious()->getValue() << endl;
+  return;
 }
 
 void case5(Tree* node) {
@@ -327,10 +342,10 @@ void rotateLeft(Tree* pivot) {
     head = newParent; 
   }
   else if (pivot == pivot->getPrevious()->getLeft()){
-    newParent->getPrevious()->setLeft(newParent);
+    pivot->getPrevious()->setLeft(newParent);
   }
   else {
-    newParent->getPrevious()->setRight(newParent);
+    pivot->getPrevious()->setRight(newParent);
   }
   newParent->setLeft(pivot);
   pivot->setPrevious(newParent);
@@ -352,10 +367,10 @@ void rotateRight(Tree* pivot) {
     head = newParent;
   }
   else if (pivot == pivot->getPrevious()->getRight()){
-    newParent->getPrevious()->setRight(newParent);
+    pivot->getPrevious()->setRight(newParent);
   }
   else {
-    newParent->getPrevious()->setLeft(newParent);
+    pivot->getPrevious()->setLeft(newParent);
   }
   newParent->setRight(pivot);
   pivot->setPrevious(newParent);
