@@ -68,7 +68,10 @@ Tree* Tree::getSibling() {
   if (this->getPrevious()->getRight() == this) {
     return this->getPrevious()->getLeft();
   }
-  else {
+  else if (this->getPrevious()->getLeft() == this) {
     return this->getPrevious()->getRight();
+  }
+  else {
+    return NULL;
   }
 }

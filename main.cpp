@@ -16,8 +16,10 @@ void rotateLeft(Tree* pivot);
 void rotateRight(Tree* pivot);
 void deleteNode(int val);
 void replaceNode(Tree* node, Tree* replacement);
+void fixTree(int color, Tree* node);
 int BLACKCOLOR = 1;
 int REDCOLOR = 2;
+int DOUBLEBLACK = 3;
 
 int main() {
   int input = -1;
@@ -161,12 +163,15 @@ void printFormatted(Tree* pos, int depth) {
     // If the node is red print it with red color
     cout << "\033[31m" << pos->getValue() << "\033[31m" << endl;
   }
+  else if (pos->getColor() == DOUBLEBLACK) {
+    cout << "\033[33m" << pos->getValue() << "\033[33m" << endl;
+  }
   else {
     // if the node is black print it with white color
     cout << "\033[37m" << pos->getValue() << "\033[37m" << endl;
   }
   if(pos->getLeft() != NULL) {
-    // Print all the left children
+     // Print all the left children
     printFormatted(pos->getLeft(), depth+1);
   }
   cout << "\033[37m" << "" << endl;
@@ -232,31 +237,54 @@ void deleteNode(int val) {
     cout << "That number does not exist in the tree" << endl;
     return;
   }
-  cout << current->getPrevious()->getValue() << endl;
+  //cout << current->getPrevious()->getValue() << endl;
 
   
   Tree* parent = current->getPrevious();
-  Tree* sibling = current->getSibling();
+  Tree* sibling;
+  if (current->getPrevious() != NULL) {
+    sibling = current->getSibling();
+  }
+  else {
+    sibling = NULL;
+  }
   int originalColor = current->getColor();
   if (current->getLeft() == NULL) {
     Tree* replacement = current->getRight();
+    if ((replacement == NULL && current->getColor() == BLACKCOLOR) || (replacement->getColor() == BLACKCOLOR && current->getColor() == BLACKCOLOR)) {
+      replacement = new Tree();
+      replacement->setColor(DOUBLEBLACK);
+      replacement->setPrevious(current->getPrevious());
+    }
     replaceNode(current, replacement);
+    fixTree(originalColor, replacement);
+    delete current;
   }
   else if (current->getRight() == NULL) {
     Tree* replacement = current->getLeft();
+    if ((replacement == NULL && current->getColor() == BLACKCOLOR) || (replacement->getColor() == BLACKCOLOR && current->getColor() == BLACKCOLOR)) {
+      replacement = new Tree();
+      replacement->setColor(DOUBLEBLACK);
+      replacement->setPrevious(current->getPrevious());
+    }
     replaceNode(current, replacement);
+    fixTree(originalColor, replacement);
+    delete current;
   }
   else {
-    Tree* temp = current->getRight();
-    while(temp->getLeft() != NULL) {
-      temp = temp->getLeft();
+    Tree* temp = current->getLeft();
+    while(temp->getRight() != NULL) {
+      temp = temp->getRight();
     }
-    Tree* replacementChild = temp->getRight();
+    Tree* replacementChild = temp->getLeft();
     replaceNode(temp, replacementChild);
-    temp->setRight(current->getRight());
-    replaceNode(current, temp);
     temp->setLeft(current->getLeft());
+    replaceNode(current, temp);
+    temp->setRight(current->getRight());
     delete current;
+    if (originalColor == temp->getColor() && originalColor == BLACKCOLOR) {
+      temp->setColor(DOUBLEBLACK);
+    }
   }
 }
 
@@ -270,9 +298,19 @@ void replaceNode(Tree* node, Tree* replacement) {
   else {
     node->getPrevious()->setRight(replacement);
   }
-  cout << node->getPrevious()->getValue() << endl;
-  replacement->setPrevious(node->getPrevious());
   //cout << node->getPrevious()->getValue() << endl;
+  if(replacement != NULL) {
+    replacement->setPrevious(node->getPrevious());
+  }
+  //cout << node->getPrevious()->getValue() << endl;
+  return;
+}
+
+void fixTree(int color, Tree* node) {
+  if (color == REDCOLOR || (node != NULL && node->getColor() == REDCOLOR)) {
+    node->setColor(BLACKCOLOR);
+  }
+  //else if (
   return;
 }
 
