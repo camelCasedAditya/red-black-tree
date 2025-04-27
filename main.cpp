@@ -17,6 +17,8 @@ void rotateRight(Tree* pivot);
 void deleteNode(int val);
 void replaceNode(Tree* node, Tree* replacement);
 void fixTree(int color, Tree* node);
+void moveDoubleBlack(Tree* initial, Tree* result);
+void testRedBlackTreeDeletionCases();
 int BLACKCOLOR = 1;
 int REDCOLOR = 2;
 int DOUBLEBLACK = 3;
@@ -24,6 +26,7 @@ int DOUBLEBLACK = 3;
 int main() {
   int input = -1;
   bool running = true;
+  testRedBlackTreeDeletionCases();
   while (running == true) {
     char* input = new char[100];
     // prompt the user and inform them of possible commands
@@ -31,6 +34,7 @@ int main() {
     cout << "\'ADD\' to add numbers one by one" << endl;
     cout << "\'ADDFILE\' to add all numbers from a file (numbers.txt)." << endl;
     cout << "\'PRINT\' to print out the tree" << endl;
+    cout << "\'DELETE\' to delete a number" << endl;
     cout << "\'QUIT\' to close the program" << endl;
 
     // get user input
@@ -151,6 +155,9 @@ void add(Tree*& head, Tree* node, int num) {
 
 // Function to print out the red black tree formatted
 void printFormatted(Tree* pos, int depth) {
+  if (pos == NULL) {
+    return;
+  }
   // Move all the way down to the right
   if (pos->getRight() != NULL) {
     printFormatted(pos->getRight(), depth+1);
@@ -222,7 +229,12 @@ void case2(Tree* child) {
 
 void deleteNode(int val) {
   Tree* current = head;
-  while(current->getValue() != val) {
+  if (current == NULL) {
+    cout << "Tree is empty" << endl;
+    return;
+  }
+  
+  while(current != NULL && current->getValue() != val) {
     if (val > current->getValue() && current->getRight() != NULL) {
       current = current->getRight();
     }
@@ -233,40 +245,38 @@ void deleteNode(int val) {
       break;
     }
   }
-  if (current->getValue() != val) {
+  
+  if (current == NULL || current->getValue() != val) {
     cout << "That number does not exist in the tree" << endl;
     return;
   }
-  //cout << current->getPrevious()->getValue() << endl;
-
   
-  Tree* parent = current->getPrevious();
-  Tree* sibling;
-  if (current->getPrevious() != NULL) {
-    sibling = current->getSibling();
-  }
-  else {
-    sibling = NULL;
-  }
   int originalColor = current->getColor();
+  
   if (current->getLeft() == NULL) {
     Tree* replacement = current->getRight();
-    if ((replacement == NULL && current->getColor() == BLACKCOLOR) || (replacement->getColor() == BLACKCOLOR && current->getColor() == BLACKCOLOR)) {
+    
+    if ((replacement == NULL && current->getColor() == BLACKCOLOR) || (replacement != NULL && replacement->getColor() == BLACKCOLOR && current->getColor() == BLACKCOLOR)) {
       replacement = new Tree();
+      replacement->setValue(0);
       replacement->setColor(DOUBLEBLACK);
       replacement->setPrevious(current->getPrevious());
     }
+    
     replaceNode(current, replacement);
     fixTree(originalColor, replacement);
     delete current;
   }
   else if (current->getRight() == NULL) {
     Tree* replacement = current->getLeft();
-    if ((replacement == NULL && current->getColor() == BLACKCOLOR) || (replacement->getColor() == BLACKCOLOR && current->getColor() == BLACKCOLOR)) {
+    
+    if ((replacement == NULL && current->getColor() == BLACKCOLOR) || (replacement != NULL && replacement->getColor() == BLACKCOLOR && current->getColor() == BLACKCOLOR)) {
       replacement = new Tree();
+      replacement->setValue(0);
       replacement->setColor(DOUBLEBLACK);
       replacement->setPrevious(current->getPrevious());
     }
+    
     replaceNode(current, replacement);
     fixTree(originalColor, replacement);
     delete current;
@@ -276,19 +286,40 @@ void deleteNode(int val) {
     while(temp->getRight() != NULL) {
       temp = temp->getRight();
     }
+    
+    int tempOriginalColor = temp->getColor();
+    
     Tree* replacementChild = temp->getLeft();
-    replaceNode(temp, replacementChild);
-    temp->setLeft(current->getLeft());
-    replaceNode(current, temp);
-    temp->setRight(current->getRight());
-    delete current;
-    if (originalColor == temp->getColor() && originalColor == BLACKCOLOR) {
-      temp->setColor(DOUBLEBLACK);
+    
+    if (temp->getPrevious() != current) {
+      replaceNode(temp, replacementChild);
+      temp->setLeft(current->getLeft());
+      if (temp->getLeft() != NULL) {
+        temp->getLeft()->setPrevious(temp);
+      }
     }
+    replaceNode(current, temp);
+    
+    temp->setRight(current->getRight());
+    if (temp->getRight() != NULL) {
+      temp->getRight()->setPrevious(temp);
+    }
+    
+    temp->setColor(originalColor);
+    if (tempOriginalColor == BLACKCOLOR && replacementChild != NULL) {
+      fixTree(BLACKCOLOR, replacementChild);
+    }
+    
+    delete current;
   }
+  if (head != NULL) {
+    head->setColor(BLACKCOLOR);
+  }
+  cout << "Deletion of " << val << " completed successfully" << endl;
 }
 
 void replaceNode(Tree* node, Tree* replacement) {
+  cout << "INTO REPLACE NODE FUNCTION" << endl;
   if (node->getPrevious() == NULL) {
     head = replacement;
   }
@@ -307,6 +338,11 @@ void replaceNode(Tree* node, Tree* replacement) {
 }
 
 void fixTree(int color, Tree* node) {
+  cout << "Into FIX TREE FUNCTION" << endl;
+  if (node == NULL) {
+    cout << "NULL NODE" << endl;
+    return;
+  }
   if (node == head) {
     node->setColor(BLACKCOLOR);
     return;
@@ -317,19 +353,120 @@ void fixTree(int color, Tree* node) {
   }
   Tree* current = node;
   while (current != NULL && current!=head && current->getColor() == DOUBLEBLACK) {
+    cout << "loop" << endl;
     Tree* parent = current->getPrevious();
+    if (parent == NULL) {
+      current->setColor(BLACKCOLOR);
+      break;
+    }
+    
     Tree* sibling = current->getSibling();
     if (sibling != NULL && sibling->getColor() == REDCOLOR) {
       sibling->setColor(BLACKCOLOR);
-      current->setColor(REDCOLOR);
+      parent->setColor(REDCOLOR);
       if (current == parent->getLeft()) {
         rotateLeft(parent);
       }
       else {
         rotateRight(parent);
       }
-      sibling = current->getSibling()
+      sibling = current->getSibling();
     }
+    if (sibling != NULL && sibling->getColor() == BLACKCOLOR && 
+    (sibling->getLeft() == NULL || sibling->getLeft()->getColor() == BLACKCOLOR) &&
+    (sibling->getRight() == NULL || sibling->getRight()->getColor() == BLACKCOLOR)) {
+      sibling->setColor(REDCOLOR);
+      if (parent->getColor() == REDCOLOR) {
+        parent->setColor(BLACKCOLOR);
+        current->setColor(BLACKCOLOR);
+        break;
+      }
+      else {
+        moveDoubleBlack(current, parent);
+        current = parent;
+      }
+    }
+    else if (sibling != NULL && sibling->getColor() == BLACKCOLOR) {
+      if (sibling == parent->getLeft() && sibling->getLeft() != NULL && sibling->getLeft()->getColor() == REDCOLOR) {
+        sibling->setColor(parent->getColor());
+        parent->setColor(BLACKCOLOR);
+        sibling->getLeft()->setColor(BLACKCOLOR);
+        rotateRight(parent);
+        current->setColor(BLACKCOLOR);
+        break;
+      }
+      else if (sibling == parent->getRight() && sibling->getRight() != NULL && sibling->getRight()->getColor() == REDCOLOR) {
+        sibling->setColor(parent->getColor());
+        parent->setColor(BLACKCOLOR);
+        sibling->getRight()->setColor(BLACKCOLOR);
+        rotateLeft(parent);
+        current->setColor(BLACKCOLOR);
+        break;
+      }
+      else if (sibling == parent->getLeft() && sibling->getRight() != NULL && sibling->getRight()->getColor() == REDCOLOR) {
+        sibling->getRight()->setColor(parent->getColor());
+        rotateLeft(sibling);
+        rotateRight(parent);
+        parent->setColor(BLACKCOLOR);
+        current->setColor(BLACKCOLOR);
+        break;
+      }
+      else if (sibling == parent->getRight() && sibling->getLeft() != NULL && sibling->getLeft()->getColor() == REDCOLOR) {
+        sibling->getLeft()->setColor(parent->getColor());
+        rotateRight(sibling);
+        rotateLeft(parent);
+        parent->setColor(BLACKCOLOR);
+        current->setColor(BLACKCOLOR);
+        break;
+      }
+    }
+    if (sibling == NULL) {
+      if (parent->getColor() == BLACKCOLOR) {
+        moveDoubleBlack(current, parent);
+        current = parent;
+      }
+      else {
+        parent->setColor(BLACKCOLOR);
+        current->setColor(BLACKCOLOR);
+        break;
+      }
+    }
+  }
+  
+  if (node->getValue() == 0) {
+    Tree* parent = node->getPrevious();
+    if (parent != NULL) {
+      if (parent->getLeft() == node) {
+        parent->setLeft(NULL);
+      } 
+      else {
+        parent->setRight(NULL);
+      }
+      delete node;
+    }
+  }
+  
+  if (head != NULL) {
+    head->setColor(BLACKCOLOR);
+  }
+  return;
+}
+
+void moveDoubleBlack(Tree* initial, Tree* result) {
+  result->setColor(DOUBLEBLACK);
+  if (initial->getValue() == 0) {
+    if (initial->getPrevious() != NULL) {
+      if (initial == initial->getPrevious()->getLeft()) {
+        initial->getPrevious()->setLeft(NULL);
+      }
+      else {
+        initial->getPrevious()->setRight(NULL);
+      }
+    }
+    delete initial;
+  }
+  else {
+    initial->setColor(BLACKCOLOR);
   }
   return;
 }
@@ -349,7 +486,7 @@ void case5(Tree* node) {
   }
 }
 
-// Case 6 function (Outer grand child)
+// Case 6 function 
 void case6(Tree* node) {
   cout << "case 6 " << endl;
   // Exit if the node is null
@@ -432,4 +569,203 @@ void rotateRight(Tree* pivot) {
   }
   newParent->setRight(pivot);
   pivot->setPrevious(newParent);
+}
+
+// THIS FUNCTION IS GENERATED BY AI TO TEST MY TREE
+void testRedBlackTreeDeletionCases() {
+  cout << "\n\n===== Starting RBT Deletion Test Sequence (Tracing User's Code) =====\n" << endl;
+
+  // Clear tree if needed (assuming it starts NULL or is cleared)
+  head = NULL; // Simple clear for test
+
+  cout << "--- Phase 1: Setup and Basic Deletions ---" << endl;
+  add(head, head, 10); cout << "ADD 10" << endl;
+  add(head, head, 20); cout << "ADD 20" << endl;
+  add(head, head, 5);  cout << "ADD 5" << endl;
+  add(head, head, 15); cout << "ADD 15" << endl;
+  add(head, head, 25); cout << "ADD 25" << endl;
+  add(head, head, 30); cout << "ADD 30" << endl;
+  cout << "\nInitial Tree State (After Phase 1 Adds):" << endl;
+  if (head) printFormatted(head, 0); else cout << "Tree is empty." << endl;
+
+  cout << "\n--- DELETE 30 ---" << endl;
+  cout << "// Expected Behavior (Your Code): Node 30 is RED. deleteNode calls replaceNode." << endl;
+  cout << "// fixTree might be called (if called unconditionally) with replacement=NULL." << endl;
+  cout << "// fixTree(NULL) should likely return quickly (or print 'NULL NODE'). No double black involved." << endl;
+  deleteNode(30);
+  cout << "Tree State After Deleting 30:" << endl;
+  if (head) printFormatted(head, 0); else cout << "Tree is empty." << endl;
+
+  cout << "\n--- DELETE 25 ---" << endl;
+  cout << "// Expected Behavior (Your Code): Node 25 is BLACK, Parent 20 is RED. Replacement is NULL." << endl;
+  cout << "// deleteNode should create artificial node (value=0, color=DOUBLEBLACK)." << endl;
+  cout << "// replaceNode inserts this '0' node. fixTree is called with '0' node." << endl;
+  cout << "// fixTree(node=0): current=0(DB), parent=20(R), sibling=15(B). Children of 15 are NULL(B)." << endl;
+  cout << "// -> Should hit Case 3 logic (Sibling Black, Children Black)." << endl;
+  cout << "// -> Inside Case 3: Since parent(20) is RED, it should recolor parent(20) BLACK, maybe recolor sibling(15) RED, and terminate." << endl;
+  cout << "// -> The artificial '0' node might persist or be handled by fixTree/deleteNode." << endl;
+  deleteNode(25);
+  cout << "Tree State After Deleting 25:" << endl;
+  if (head) printFormatted(head, 0); else cout << "Tree is empty." << endl; // Observe if '0' is present
+
+  cout << "\n--- DELETE 15 ---" << endl;
+  cout << "// Expected Behavior (Your Code): Node 15 is likely RED (recolored in previous step)." << endl;
+  cout << "// deleteNode calls replaceNode. fixTree might be called with replacement=NULL." << endl;
+  cout << "// fixTree(NULL) should return quickly. No double black involved." << endl;
+  deleteNode(15);
+  cout << "Tree State After Deleting 15:" << endl;
+  if (head) printFormatted(head, 0); else cout << "Tree is empty." << endl;
+
+  cout << "\n--- DELETE 5 ---" << endl;
+  cout << "// Expected Behavior (Your Code): Node 5 is BLACK, Parent 10 is BLACK." << endl;
+  cout << "// deleteNode creates artificial node '0'(DB). replaceNode inserts it." << endl;
+  cout << "// fixTree(node=0): current=0(DB), parent=10(B), sibling=20(B - was recolored)." << endl;
+  cout << "// -> Should hit Case 3 logic (Sibling Black, Children Black)." << endl;
+  cout << "// -> Inside Case 3: Parent(10) is BLACK. Should recolor sibling(20) RED." << endl;
+  cout << "// -> Should call moveDoubleBlack(initial=0, result=parent=10)." << endl;
+  cout << "// -> moveDoubleBlack likely sets parent(10) to DOUBLEBLACK and removes '0'." << endl;
+  cout << "// -> fixTree loop continues with current=10(DB). Parent=NULL (is head)." << endl;
+  cout << "// -> Loop terminates (current==head). Root check sets head(10) BLACK." << endl;
+  deleteNode(5);
+  cout << "Tree State After Deleting 5:" << endl;
+  if (head) printFormatted(head, 0); else cout << "Tree is empty." << endl;
+
+  cout << "\n--- DELETE 20 ---" << endl;
+  cout << "// Expected Behavior (Your Code): Node 20 is likely RED (recolored in previous step)." << endl;
+  cout << "// fixTree might be called with replacement=NULL, should return quickly." << endl;
+  deleteNode(20);
+  cout << "Tree State After Deleting 20:" << endl;
+  if (head) printFormatted(head, 0); else cout << "Tree is empty." << endl;
+
+
+  cout << "\n--- Phase 2: More Complex Cases ---" << endl;
+  // Tree should be just 10B now. Rebuild.
+  head = NULL; cout << "Clearing Tree..." << endl; add(head, head, 10);
+  add(head, head, 5);  cout << "ADD 5" << endl;
+  add(head, head, 20); cout << "ADD 20" << endl;
+  add(head, head, 15); cout << "ADD 15" << endl;
+  add(head, head, 25); cout << "ADD 25" << endl;
+  add(head, head, 3);  cout << "ADD 3" << endl;
+  add(head, head, 7);  cout << "ADD 7" << endl;
+  add(head, head, 1);  cout << "ADD 1" << endl;
+  add(head, head, 4);  cout << "ADD 4" << endl;
+  cout << "\nTree State (After Phase 2 Adds):" << endl;
+  if (head) printFormatted(head, 0); else cout << "Tree is empty." << endl;
+
+  // Deletes of RED leaves 1, 4, 7 will likely call fixTree(NULL) - skip detailed comments
+
+  deleteNode(1); cout << "\nDELETE 1 (RED Leaf)\n";
+  deleteNode(4); cout << "DELETE 4 (RED Leaf)\n";
+  deleteNode(3); cout << "DELETE 3 (BLACK Leaf, Parent RED)\n"; // Similar to DELETE 25 case logic
+  cout << "Tree State After Deleting 1, 4, 3:" << endl;
+   if (head) printFormatted(head, 0); else cout << "Tree is empty." << endl;
+
+  deleteNode(7); cout << "\nDELETE 7 (RED Leaf)\n";
+   cout << "Tree State After Deleting 7:" << endl;
+   if (head) printFormatted(head, 0); else cout << "Tree is empty." << endl;
+
+
+  cout << "\n--- DELETE 5 ---" << endl;
+  cout << "// Expected Behavior (Your Code): Node 5 BLACK, Parent 10 BLACK, Sibling 20 RED." << endl;
+  cout << "// deleteNode creates artificial node '0'(DB)." << endl;
+  cout << "// fixTree(node=0): current=0(DB), parent=10(B), sibling=20(R)." << endl;
+  cout << "// -> Should hit Case 2 logic (Sibling Red)." << endl;
+  cout << "// -> Inside Case 2: Recolor sibling(20) BLACK. Recolor parent(10) RED. Rotate parent(10) Left." << endl;
+  cout << "// -> Sibling reference updates (new sibling is 15B)." << endl;
+  cout << "// -> Code should continue within fixTree to handle black sibling case." << endl;
+  cout << "// -> Now: current=0(DB), parent=10(R), sibling=15(B). Children NULL(B)." << endl;
+  cout << "// -> Should hit Case 3 logic (Sibling Black, Children Black)." << endl;
+  cout << "// -> Inside Case 3: Parent(10) is RED. Recolor parent(10) BLACK, maybe sibling(15) RED. Terminate." << endl;
+  cout << "// -> Artificial '0' node fate depends on implementation details." << endl;
+  deleteNode(5);
+  cout << "Tree State After Deleting 5:" << endl;
+   if (head) printFormatted(head, 0); else cout << "Tree is empty." << endl;
+
+  add(head, head, 12); cout << "\nADD 12 (Setup for next delete)" << endl;
+  cout << "Tree State After Adding 12:" << endl;
+   if (head) printFormatted(head, 0); else cout << "Tree is empty." << endl;
+
+
+  cout << "\n--- DELETE 25 ---" << endl;
+  cout << "// Expected Behavior (Your Code): Node 25 BLACK, Parent 20 BLACK, Sibling 12 BLACK." << endl;
+  cout << "// Tree state after ADD 12 should be: 20B / 12B \\ 25B | / \\ | 10R 15R" << endl;
+  cout << "// deleteNode creates artificial node '0'(DB)." << endl;
+  cout << "// fixTree(node=0): current=0(DB), parent=20(B), sibling=12(B)." << endl;
+  cout << "// Sibling's children: near=10(R), far=15(R)." << endl;
+  cout << "// -> Should hit Case 5 logic (Sibling Black, Far child Red)." << endl;
+  cout << "// -> Inside Case 5: Recolor sibling(12) BLACK (parent's color). Recolor parent(20) BLACK. Recolor far child(15) BLACK." << endl;
+  cout << "// -> Rotate parent(20) Right. Break from loop." << endl;
+  cout << "// -> Artificial '0' node fate depends on implementation details." << endl;
+  deleteNode(25);
+  cout << "Tree State After Deleting 25:" << endl;
+   if (head) printFormatted(head, 0); else cout << "Tree is empty." << endl;
+
+  // Skip delete 15, 12 for brevity - they would involve propagation using artificial node + moveDoubleBlack
+
+  cout << "\n--- Phase 3: Case 4 ---" << endl;
+  head = NULL; cout << "Clearing tree for Phase 3..." << endl;
+  add(head, head, 10); cout << "ADD 10" << endl;
+  add(head, head, 5);  cout << "ADD 5" << endl;
+  add(head, head, 20); cout << "ADD 20" << endl;
+  add(head, head, 15); cout << "ADD 15" << endl;
+  cout << "\nTree State (After Phase 3 Adds): 10B / 5B \\ 20B \\ 15R" << endl;
+  if (head) printFormatted(head, 0); else cout << "Tree is empty." << endl;
+
+
+  cout << "\n--- DELETE 5 ---" << endl;
+  cout << "// Expected Behavior (Your Code): Node 5 BLACK, Parent 10 BLACK, Sibling 20 BLACK." << endl;
+  cout << "// deleteNode creates artificial node '0'(DB)." << endl;
+  cout << "// fixTree(node=0): current=0(DB), parent=10(B), sibling=20(B)." << endl;
+  cout << "// Sibling's children: near=15(R), far=NULL(B)." << endl;
+  cout << "// -> Should hit Case 4 logic (Sibling Black, Near child Red)." << endl;
+  cout << "// -> Inside Case 4 (Right Sibling): Recolor near child(15) based on parent(10) color (BLACK?). Rotate sibling(20) Right. Rotate parent(10) Left. Recolor parent(10) BLACK. Break." << endl;
+  cout << "//    (Check exact logic in your case 4 for recoloring)." << endl;
+  cout << "// -> Artificial '0' node fate depends on implementation details." << endl;
+  deleteNode(5);
+  cout << "Tree State After Deleting 5:" << endl;
+   if (head) printFormatted(head, 0); else cout << "Tree is empty." << endl;
+
+
+  cout << "\n--- Phase 4: Deletion with Predecessor Cases ---" << endl;
+  head = NULL; cout << "Clearing tree for Phase 4..." << endl;
+  add(head, head, 50); add(head, head, 25); add(head, head, 75); add(head, head, 10);
+  add(head, head, 30); add(head, head, 60); add(head, head, 80); add(head, head, 5);
+  add(head, head, 35);
+  cout << "\nTree State (After Phase 4 Adds):" << endl;
+  if (head) printFormatted(head, 0); else cout << "Tree is empty." << endl;
+
+
+  cout << "\n--- DELETE 25 ---" << endl;
+  cout << "// Expected Behavior (Your Code): Delete Node(25R) with 2 children. Predecessor is 10B." << endl;
+  cout << "// tempOriginalColor = BLACK. replacementChild = 5R." << endl;
+  cout << "// replaceNode(10, 5). replaceNode(25, 10). 10->setColor(RED) (25's color)." << endl;
+  cout << "// fixTree called because tempOriginalColor was BLACK. fixTree(BLACKCOLOR, 5R)." << endl;
+  cout << "// -> Inside fixTree: Node 5R is RED. Recolor 5 to BLACK. Terminate." << endl;
+  cout << "// -> No artificial node created in this specific scenario." << endl;
+  deleteNode(25);
+  cout << "Tree State After Deleting 25:" << endl;
+   if (head) printFormatted(head, 0); else cout << "Tree is empty." << endl;
+
+
+  cout << "\n--- DELETE 50 ---" << endl;
+  cout << "// Expected Behavior (Your Code): Delete Node(50B) with 2 children. Predecessor is 35R." << endl;
+  cout << "// tempOriginalColor = RED. replacementChild = NULL." << endl;
+  cout << "// replaceNode(35, NULL). replaceNode(50, 35). 35->setColor(BLACK) (50's color)." << endl;
+  cout << "// fixTree *not* called because tempOriginalColor was RED." << endl;
+  cout << "// -> No artificial node created." << endl;
+  deleteNode(50);
+  cout << "Tree State After Deleting 50:" << endl;
+   if (head) printFormatted(head, 0); else cout << "Tree is empty." << endl;
+
+  // Cleanup deletion
+  cout << "\n--- DELETE 60 ---" << endl;
+   cout << "// Expected Behavior (Your Code): Node 60 BLACK, Parent 75 RED." << endl;
+   cout << "// -> Creates artificial node '0'(DB)." << endl;
+   cout << "// -> fixTree(node=0) hits Case 3 (Sibling 80B, Children NULL), Parent RED terminates." << endl;
+  deleteNode(60);
+  cout << "Tree State After Deleting 60:" << endl;
+   if (head) printFormatted(head, 0); else cout << "Tree is empty." << endl;
+
+
+  cout << "\n===== RBT Deletion Test Sequence (Tracing User's Code) Finished =====\n" << endl;
 }
