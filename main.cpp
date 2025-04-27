@@ -307,10 +307,30 @@ void replaceNode(Tree* node, Tree* replacement) {
 }
 
 void fixTree(int color, Tree* node) {
+  if (node == head) {
+    node->setColor(BLACKCOLOR);
+    return;
+  }
   if (color == REDCOLOR || (node != NULL && node->getColor() == REDCOLOR)) {
     node->setColor(BLACKCOLOR);
+    return;
   }
-  //else if (
+  Tree* current = node;
+  while (current != NULL && current!=head && current->getColor() == DOUBLEBLACK) {
+    Tree* parent = current->getPrevious();
+    Tree* sibling = current->getSibling();
+    if (sibling != NULL && sibling->getColor() == REDCOLOR) {
+      sibling->setColor(BLACKCOLOR);
+      current->setColor(REDCOLOR);
+      if (current == parent->getLeft()) {
+        rotateLeft(parent);
+      }
+      else {
+        rotateRight(parent);
+      }
+      sibling = current->getSibling()
+    }
+  }
   return;
 }
 
