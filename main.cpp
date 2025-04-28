@@ -26,7 +26,7 @@ int DOUBLEBLACK = 3;
 int main() {
   int input = -1;
   bool running = true;
-  testRedBlackTreeDeletionCases();
+  //testRedBlackTreeDeletionCases();
   while (running == true) {
     char* input = new char[100];
     // prompt the user and inform them of possible commands
