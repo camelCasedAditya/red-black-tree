@@ -291,22 +291,28 @@ void deleteNode(int val) {
     
     Tree* replacementChild = temp->getLeft();
     
-    if (temp->getPrevious() != current) {
-      replaceNode(temp, replacementChild);
-      temp->setLeft(current->getLeft());
-      if (temp->getLeft() != NULL) {
-        temp->getLeft()->setPrevious(temp);
-      }
+    if (tempOriginalColor == BLACKCOLOR && (replacementChild == NULL || replacementChild->getColor() == BLACKCOLOR)) {
+      Tree* doubleBlack = new Tree();
+      doubleBlack->setValue(0);
+      doubleBlack->setPrevious(temp->getPrevious());
+      doubleBlack->setColor(DOUBLEBLACK);
+      replacementChild = doubleBlack;
     }
+    replaceNode(temp, replacementChild);
     replaceNode(current, temp);
     
     temp->setRight(current->getRight());
     if (temp->getRight() != NULL) {
       temp->getRight()->setPrevious(temp);
     }
+
+    temp->setLeft(current->getLeft());
+    if (temp->getLeft() != NULL) {
+      temp->getLeft()->setPrevious(temp);
+    }
     
     temp->setColor(originalColor);
-    if (tempOriginalColor == BLACKCOLOR && replacementChild != NULL) {
+    if (tempOriginalColor == BLACKCOLOR) {
       fixTree(BLACKCOLOR, replacementChild);
     }
     
