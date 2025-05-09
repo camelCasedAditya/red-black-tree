@@ -240,11 +240,13 @@ void case2(Tree* child) {
 }
 
 void deleteNode(int val, int search) {
+  // Sets up the deletion search for the target node
   Tree* current = head;
   if (current == NULL) {
     return;
   }
-  
+
+  // Move down the tree based on the target value until the correct node is reached
   while(current != NULL && current->getValue() != val) {
     if (val > current->getValue() && current->getRight() != NULL) {
       current = current->getRight();
@@ -256,32 +258,45 @@ void deleteNode(int val, int search) {
       break;
     }
   }
-  
+
+  // We we get to the end of the tree and the value is not found we tell the user that it is not in the tree
   if (current == NULL || current->getValue() != val) {
     cout << "That number DOES NOT exist in the tree" << endl;
     return;
   }
+  // If the user wanted to only search for the number we tell them that the number is found
   else if (search == 1) {
     cout << "That number DOES exist in the tree!" << endl;
     return;
   }
-  
+
+  // Store the original color of the node that is being deleted
   int originalColor = current->getColor();
-  
+
+  // If the left child of the node is null
   if (current->getLeft() == NULL) {
+    // Set the replacement child to the right node
     Tree* replacement = current->getRight();
-    
+
+    // If both the replacement and the node to be deleted are black
     if ((replacement == NULL && current->getColor() == BLACKCOLOR) || (replacement != NULL && replacement->getColor() == BLACKCOLOR && current->getColor() == BLACKCOLOR)) {
+      // create a new null node for the replacement and set its color to double black
       replacement = new Tree();
       replacement->setValue(0);
       replacement->setColor(DOUBLEBLACK);
       replacement->setPrevious(current->getPrevious());
     }
-    
+
+    // Replace the node to be deleted with the replacement node
     replaceNode(current, replacement);
+
+    // Fix the tree to maintain the red black tree
     fixTree(originalColor, replacement);
+
+    // delete the target node
     delete current;
   }
+  // If the right node is null we do the mirror of the previous if statement
   else if (current->getRight() == NULL) {
     Tree* replacement = current->getLeft();
     
@@ -297,25 +312,34 @@ void deleteNode(int val, int search) {
     delete current;
   }
   else {
+    // If both children of the target node exist
+
+    // Find the predesessor for the target node
     Tree* temp = current->getLeft();
     while(temp->getRight() != NULL) {
       temp = temp->getRight();
     }
-    
+
+    // Store the color of the replacment node
     int tempOriginalColor = temp->getColor();
-    
+
+    // Store the children of the replacement if there are any
     Tree* replacementChild = temp->getLeft();
-    
+
+    // Both the replacement node and its children are black
     if (tempOriginalColor == BLACKCOLOR && (replacementChild == NULL || replacementChild->getColor() == BLACKCOLOR)) {
+      // create a double black node to replace the replacement node
       Tree* doubleBlack = new Tree();
       doubleBlack->setValue(0);
       doubleBlack->setPrevious(temp->getPrevious());
       doubleBlack->setColor(DOUBLEBLACK);
       replacementChild = doubleBlack;
     }
+    // Call function to replace the replacement node with the doubleblack node
     replaceNode(temp, replacementChild);
     replaceNode(current, temp);
-    
+
+    // Set the left and right of the replacement in the new spot
     temp->setRight(current->getRight());
     if (temp->getRight() != NULL) {
       temp->getRight()->setPrevious(temp);
@@ -325,20 +349,25 @@ void deleteNode(int val, int search) {
     if (temp->getLeft() != NULL) {
       temp->getLeft()->setPrevious(temp);
     }
-    
+
+    // If the replacement color originally was black we fix the tree
     temp->setColor(originalColor);
     if (tempOriginalColor == BLACKCOLOR) {
       fixTree(BLACKCOLOR, replacementChild);
     }
-    
+
+    // delete the target node
     delete current;
   }
+  // Set head to black
   if (head != NULL) {
     head->setColor(BLACKCOLOR);
   }
+  // Inform user of successful deletion
   cout << "Deletion of " << val << " completed successfully" << endl;
 }
 
+// Function to move replace a node with another node
 void replaceNode(Tree* node, Tree* replacement) {
   if (node->getPrevious() == NULL) {
     head = replacement;
@@ -359,29 +388,39 @@ void replaceNode(Tree* node, Tree* replacement) {
 
 // Function to fix the tree after the node has been deleted
 void fixTree(int color, Tree* node) {
+  // If the node is NULL we cant run this function so we exit
   if (node == NULL) {
     return;
   }
+  // If the node to fix is head we set it to black
   if (node == head) {
     node->setColor(BLACKCOLOR);
     return;
   }
+  // If the deleted node is red the replacement is red we just need to recolor it to black
   if (color == REDCOLOR || (node != NULL && node->getColor() == REDCOLOR)) {
     node->setColor(BLACKCOLOR);
     return;
   }
+  // Set up double black while loop to propagate up the tree as we fix it
   Tree* current = node;
   while (current != NULL && current!=head && current->getColor() == DOUBLEBLACK) {
+
+    // Set and check for parent
     Tree* parent = current->getPrevious();
     if (parent == NULL) {
       current->setColor(BLACKCOLOR);
       break;
     }
-    
+    // Get sibling node
     Tree* sibling = current->getSibling();
+
+    // If the sibling is red
     if (sibling != NULL && sibling->getColor() == REDCOLOR) {
+      // Recolor sibling and parent
       sibling->setColor(BLACKCOLOR);
       parent->setColor(REDCOLOR);
+      // Rotate the tree to make the sibling the parent
       if (current == parent->getLeft()) {
         rotateLeft(parent);
       }
@@ -390,30 +429,41 @@ void fixTree(int color, Tree* node) {
       }
       sibling = current->getSibling();
     }
-    if (sibling != NULL && sibling->getColor() == BLACKCOLOR && 
-    (sibling->getLeft() == NULL || sibling->getLeft()->getColor() == BLACKCOLOR) &&
-    (sibling->getRight() == NULL || sibling->getRight()->getColor() == BLACKCOLOR)) {
+    // If the sibling is black and and both of siblings kids are black
+    if (sibling != NULL && sibling->getColor() == BLACKCOLOR && (sibling->getLeft() == NULL || sibling->getLeft()->getColor() == BLACKCOLOR) && (sibling->getRight() == NULL || sibling->getRight()->getColor() == BLACKCOLOR)) {
       sibling->setColor(REDCOLOR);
+      // If the parent is red we recolor is to black along with the current node. This adds a black node to the path that has the double black
       if (parent->getColor() == REDCOLOR) {
         parent->setColor(BLACKCOLOR);
         current->setColor(BLACKCOLOR);
         break;
       }
       else {
+	// If the parent is already black we move the doubleblack up the tree
         moveDoubleBlack(current, parent);
         current = parent;
       }
     }
     else if (sibling != NULL && sibling->getColor() == BLACKCOLOR) {
+      // If the sibling is black and both children are NOT black
+
+
+      // If the current node is the right child and the farther nephew is red
       if (sibling == parent->getLeft() && sibling->getLeft() != NULL && sibling->getLeft()->getColor() == REDCOLOR) {
-        sibling->setColor(parent->getColor());
+	// Set the siblings color to the parents color and make the parent black
+	sibling->setColor(parent->getColor());
         parent->setColor(BLACKCOLOR);
         sibling->getLeft()->setColor(BLACKCOLOR);
+
+	// Rotate around the parent to make the sibling the new parent
         rotateRight(parent);
+
+	// Set current to black.
         current->setColor(BLACKCOLOR);
         break;
       }
       else if (sibling == parent->getRight() && sibling->getRight() != NULL && sibling->getRight()->getColor() == REDCOLOR) {
+	// Same logiic as previous case except it is mirrored to other side
         sibling->setColor(parent->getColor());
         parent->setColor(BLACKCOLOR);
         sibling->getRight()->setColor(BLACKCOLOR);
@@ -421,16 +471,21 @@ void fixTree(int color, Tree* node) {
         current->setColor(BLACKCOLOR);
         break;
       }
+      // If the closer nephew is red
       else if (sibling == parent->getLeft() && sibling->getRight() != NULL && sibling->getRight()->getColor() == REDCOLOR) {
-        sibling->getRight()->setColor(parent->getColor());
+	// Rotate around sibling to make the closer newphhew the new sibling
+	sibling->getRight()->setColor(parent->getColor());
         rotateLeft(sibling);
+
+	// Rotate around parent to make the new sibling the parent
         rotateRight(parent);
         parent->setColor(BLACKCOLOR);
         current->setColor(BLACKCOLOR);
         break;
       }
       else if (sibling == parent->getRight() && sibling->getLeft() != NULL && sibling->getLeft()->getColor() == REDCOLOR) {
-        sibling->getLeft()->setColor(parent->getColor());
+	// Same logic as previous case but mirrored
+	sibling->getLeft()->setColor(parent->getColor());
         rotateRight(sibling);
         rotateLeft(parent);
         parent->setColor(BLACKCOLOR);
@@ -438,19 +493,23 @@ void fixTree(int color, Tree* node) {
         break;
       }
     }
+    // If the sibling is null
     if (sibling == NULL) {
+      // If parent is black we move the double black up to the parent and loop back to check the cases
       if (parent->getColor() == BLACKCOLOR) {
         moveDoubleBlack(current, parent);
         current = parent;
       }
       else {
+	// If the parent is red we recolor the current and parent to black to balance the number of black nodes
         parent->setColor(BLACKCOLOR);
         current->setColor(BLACKCOLOR);
         break;
       }
     }
   }
-  
+
+  // Remove the temporary null node from the tree if it was needed
   if (node->getValue() == 0) {
     Tree* parent = node->getPrevious();
     if (parent != NULL) {
@@ -545,6 +604,7 @@ void case4(Tree* node) {
   }
 }
 
+// Function to rotate the tree to the left
 void rotateLeft(Tree* pivot) {
   if (pivot == NULL || pivot->getRight() == NULL) {
     return;
@@ -569,6 +629,7 @@ void rotateLeft(Tree* pivot) {
   pivot->setPrevious(newParent);
 }
 
+// Function to rotate the tree to the right
 void rotateRight(Tree* pivot) {
   if (pivot == NULL || pivot->getLeft() == NULL) {
     return;
